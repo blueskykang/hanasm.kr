@@ -1,0 +1,7 @@
+# Postfix sender_access — 피싱 발신 도메인 차단
+# 적용: postmap /etc/postfix/sender_access && systemctl reload postfix
+# main.cf: smtpd_sender_restrictions = check_sender_access hash:/etc/postfix/sender_access, ...
+#
+# 2026-07 피싱 캠페인 (발송 IP 172.245.174.85, "Kangc" 표시이름 위장)
+kemari.digital          REJECT Phishing (2026-07 campaign, OAuth credential theft)
+nextgenerationvt.com    REJECT Phishing (2026-07 campaign, same source IP)

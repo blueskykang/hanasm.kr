@@ -1,0 +1,26 @@
+# Postfix header_checks (PCRE) — 피싱 헤더 기반 차단
+# 적용: main.cf 에 header_checks = pcre:/etc/postfix/header_checks.pcre
+#       systemctl reload postfix
+# 확인: postconf -m | grep pcre  (pcre 지원 필요)
+#
+# ─────────────────────────────────────────────────────────────
+# [1] 공격자 발송 IP 차단 (가장 강력 — 도메인 바꿔도 잡힘)
+# ─────────────────────────────────────────────────────────────
+# 주의: 당신 Postfix의 접속 IP는 Google 릴레이(209.85.x.x)라 client 차단 불가.
+#       공격자 IP는 Google이 붙인 Received 헤더 안에만 있으므로 header_checks로 잡는다.
+# 2026-07 피싱: 172.245.174.85 (HELO: hes.it, thearkrentals.com)
+/^Received:.*\[172\.245\.174\.85\]/   REJECT Blocked: known phishing source IP (2026-07)
+
+# ─────────────────────────────────────────────────────────────
+# [2] Google Workspace 릴레이 악용 흔적 + 외부도메인 조합 (참고용, 기본 주석)
+# ─────────────────────────────────────────────────────────────
+# X-Relaying-Domain 헤더는 smtp-relay.gmail.com 악용 시 붙는다.
+# 정상 지메일에는 없음. 오탐 우려로 WARN(로그만)으로 시작 권장.
+#/^X-Relaying-Domain:\s*(kemari\.digital|nextgenerationvt\.com)/   REJECT Blocked: phishing relay domain
+
+# ─────────────────────────────────────────────────────────────
+# [3] "Kangc" 표시이름 위장 (불완전 — 참고)
+# ─────────────────────────────────────────────────────────────
+# From 헤더가 MIME 인코딩(=?UTF-8?B?/Q?)되면 "Kangc"가 안 보일 수 있어 불안정.
+# Q-인코딩 케이스만 부분적으로 잡힘. 주 방어책 아님. 필요 시 WARN으로.
+#/^From:.*Kangc.*<[^>]*@(?!.*kangc\.co\.kr)/   WARN Possible Kangc display-name spoofing
